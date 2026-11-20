@@ -1,7 +1,6 @@
 # Football Predictor — GTK4
 
-Aplicație desktop în Python pentru **analiza și predicția rezultatelor meciurilor de fotbal**, proiect universitar. Interfață în română, separată de prelucrarea datelor și de algoritmi.
-
+Aplicație desktop în Python pentru **analiza și predicția rezultatelor meciurilor de fotbal**.
 ## Pornire în mediul local existent
 
 ```bash
@@ -45,7 +44,7 @@ src/football_predictor/
 
 ## Date
 
-Fișierul principal `matches.csv` a fost completat prin `soccerdata.MatchHistory` și conține **5.520 de perspective de echipă**, între **2019-08-09 și 2026-11-08**, reprezentând **2.760 de meciuri distincte**. Cele 480 de meciuri noi provin din football-data.co.uk; statisticile indisponibile au rămas nule. Operațiile, sursele, backupul și verificările sunt documentate în **`DOCUMENTARE_DATE.md`**. Un meci apare de două ori în sursă: o dată pentru gazde și o dată pentru oaspeți. Aplicația construiește o singură observație pe meci, orientată gazde/oaspeți. Nu interpreta numărul de rânduri brute drept număr de meciuri distincte.
+Fișierul principal `matches.csv` a fost completat prin `soccerdata.MatchHistory` și conține **5.520 de perspective de echipă**, între **2019-08-09 și 2026-11-08**, reprezentând **2.760 de meciuri distincte**. Operațiile, sursele și verificările sunt documentate în **`DOCUMENTARE_DATE.md`**. Un meci apare de două ori în sursă: o dată pentru gazde și o dată pentru oaspeți. Aplicația construiește o singură observație pe meci, orientată gazde/oaspeți. Nu interpreta numărul de rânduri brute drept număr de meciuri distincte.
 
 Coloane de bază în sursă: `date`, `season`, `team`, `opponent`, `venue`, `gf`, `ga`. Statisticile `sh`, `sot`, `poss` sunt utilizate numai din meciurile anterioare. Coloanele complet goale, de exemplu unele valori xG din această extracție, nu sunt prezentate drept informație disponibilă. Nu se descarcă automat date de pe internet.
 
@@ -60,7 +59,7 @@ Coloane de bază în sursă: `date`, `season`, `team`, `opponent`, `venue`, `gf`
 
 Ținta este cu trei clase: `0 = victorie gazde`, `1 = egal`, `2 = victorie oaspeți`. Procentele sunt estimări ale modelelor, nu certitudini și nici garanții de profit.
 
-Împărțirea datelor este cronologică, fără amestecare aleatorie; o zi de meci nu este împărțită între două seturi. Hiperparametrii se selectează pe validare, nu pe test. Statisticile istorice din test pot include rezultatele observate ale meciurilor de test anterioare: aceasta este evaluare secvențială pre-meci, nu prognoza unui sezon întreg dintr-o singură dată.
+Împărțirea datelor este cronologică, fără amestecare aleatorie, o zi de meci nu este împărțită între două seturi. Hiperparametrii se selectează pe validare, nu pe test. Statisticile istorice din test pot include rezultatele observate ale meciurilor de test anterioare: aceasta este evaluare secvențială pre-meci, nu prognoza unui sezon întreg dintr-o singură dată.
 
 ```bash
 ./run.sh --evaluate --output reports
