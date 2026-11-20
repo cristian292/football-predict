@@ -1,0 +1,22 @@
+/* Native desktop, charcoal pitch / emerald data accent. */
+window { background: #101815; color: #e7efea; font-family: "Noto Sans", sans-serif; font-size: 14px; }
+headerbar { background: #16221c; border-bottom: 1px solid #304339; }
+stacksidebar { background: #121d17; border-right: 1px solid #304339; padding: 16px 8px; }
+stacksidebar row { border-radius: 6px; padding: 12px 10px; margin: 3px 0; }
+stacksidebar row:selected { background: #234637; color: #9de4c1; }
+.title-1 { font-size: 25px; font-weight: 700; }
+.heading { font-weight: 700; font-size: 15px; }
+.muted { color: #a6b8ad; }
+.panel { background: #18251e; border: 1px solid #304339; border-radius: 8px; padding: 17px; }
+button { padding: 9px 14px; border-radius: 6px; }
+button.suggested-action { background: #318361; color: #ffffff; }
+button:disabled { opacity: .48; }
+entry, dropdown { background: #101b15; border: 1px solid #3e5648; border-radius: 6px; min-height: 34px; }
+.table-head { color: #a7bdb0; font-size: 12px; font-weight: 600; padding: 8px 0 12px; border-bottom: 1px solid #405347; }
+.table-cell { padding: 11px 0; border-bottom: 1px solid #2b3c31; }
+.numeric { font-family: "Noto Sans Mono", monospace; font-feature-settings: "tnum"; }
+.warning { color: #e8c887; }
+.error { color: #ffb0a7; }
+.status { background: #16221c; border-top: 1px solid #304339; padding: 10px 20px; }
+progressbar trough { background: #23392b; min-height: 3px; }
+progressbar progress { background: #63c796; }

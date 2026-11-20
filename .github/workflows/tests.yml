@@ -1,0 +1,26 @@
+name: Python and GTK tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install native GTK and headless display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-venv python3-gi gir1.2-gtk-4.0 xvfb xauth
+      - name: Install application
+        run: |
+          /usr/bin/python3 -m venv --system-site-packages .venv
+          .venv/bin/python -m pip install -e '.[dev,scraping]'
+      - name: Test algorithms and desktop widgets
+        run: xvfb-run -a .venv/bin/python -m pytest tests -q

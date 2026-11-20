@@ -1,0 +1,25 @@
+# Python / local tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+.idea/
+.ipynb_checkpoints/
+# Generated experiments and local data (source rights must be checked)
+reports/
+*.log
+matches.csv
+matches_updated.csv
+data/raw/
+data/backups/
+data/*manifest*.json
+# Credentials
+.env
+.env.*
+!.env.example
