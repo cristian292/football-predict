@@ -1,108 +1,155 @@
-# Football Predictor — GTK4
+# Football Predictor — aplicație web
 
-Aplicație desktop în Python pentru **analiza și predicția rezultatelor meciurilor de fotbal**.
-## Pornire în mediul local existent
+Aplicație în Python pentru **analiza și predicția rezultatelor meciurilor de fotbal**, cu interfață în română, direct în browser.
 
-```bash
-cd ~/Documents/py/gambling
-./run.sh
-```
+Versiunea web nu folosește GTK, GDK, noVNC sau un display virtual. Modelele și prelucrarea datelor sunt separate de prezentare. Containerizarea va fi pregătită ulterior, împreună cu autorul proiectului; în această etapă nu se construiește o imagine Docker.
 
-`run.sh` folosește `.venv/bin/python`. Pe Debian/Parrot, dacă este compatibil, adaugă la finalul căii de import legăturile GI instalate de sistem; nu înlocuiește pachetele științifice ale mediului virtual. Pentru alt interpretor: `FOOTBALL_PYTHON=/cale/python ./run.sh`.
+## Pornire rapidă pe Linux/macOS
 
-## Instalare curată pe Linux Debian/Parrot/Ubuntu
-
-Dependențele native GTK nu sunt incluse în `requirements.txt`:
+Ai nevoie de Python **3.11 sau mai nou** și de acces la repository-ul privat. Din directorul proiectului:
 
 ```bash
-sudo apt install python3-venv python3-gi gir1.2-gtk-4.0
-python3 -m venv --system-site-packages .venv
-.venv/bin/python -m pip install -e '.[dev]'
-./run.sh --data /cale/catre/matches.csv
+bash install.sh
+bash run.sh --doctor
+bash run.sh
 ```
 
-Nu recrea peste un mediu existent fără backup. Python din venv trebuie să fie compatibil cu PyGObject al distribuției. Instrucțiunile de mai sus sunt pentru Linux; distribuirea pentru Windows/macOS necesită împachetare și dependențe native separate.
+Apoi deschide în browser:
 
-## Structură
+```text
+http://127.0.0.1:8080
+```
+
+Instalarea nouă creează o `.venv` izolată. Nu instalează pachete de sistem automat și nu descarcă meciuri. Nu sunt necesare GTK sau PyGObject. Pentru verificarea prerechizitelor fără instalare: `bash install.sh --check-only`.
+
+### Instalare manuală, inclusiv Windows
+
+Linux/macOS:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e .
+.venv/bin/python -m football_predictor
+```
+
+Windows, în PowerShell:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -m football_predictor
+```
+
+Aceste instrucțiuni folosesc Python și browserul, nu un server grafic Linux. Verificările locale executate și limitele testării pe alte sisteme sunt consemnate în `DOCUMENTARE_DATE.md`.
+
+### Port, date și directorul de lucru
+
+```bash
+bash run.sh --port 8081
+bash run.sh --data /cale/catre/matches.csv
+bash run.sh --work-dir /cale/catre/date-web
+```
+
+Implicit, serverul ascultă numai pe `127.0.0.1`. Rulează cu Waitress, fără debugger sau reloader Flask. Oprește-l cu Ctrl+C.
+
+## Utilizarea interfeței
+
+1. Verifică numele fișierului și intervalul datelor încărcate.
+2. Apasă **Antrenează modelele**. Operația rulează în fundal; progresul este afișat în pagină.
+3. În **Predicții**, selectează două echipe diferite și o dată ulterioară ultimei partide din date.
+4. Compară probabilitățile 1/X/2, scorurile Poisson și matricea de scor.
+5. În **Experimente**, consultă metricile, separarea cronologică, configurațiile și matricile de confuzie.
+6. În **Date**, verifică clasamentele și istoricul echipelor.
+7. Importă un CSV pentru alt istoric sau descarcă rapoartele CSV/JSON din interfață.
+
+Selectarea echipelor și a datei este o **simulare**, nu confirmarea unui meci programat. Datele nu sunt actualizate automat de pe internet.
+
+Importul valid resetează modelele și rezultatele anterioare. Un fișier invalid nu trebuie să înlocuiască istoricul deja încărcat. Fișierul original `matches.csv` nu este suprascris de importurile web.
+
+## Structură modulară
 
 ```text
 src/football_predictor/
-  cli.py                 # lansare desktop / evaluare fără display
-  data.py                # validare CSV, normalizare nume, clasament
-  features.py            # statistici exclusiv pre-meci
-  models/                # KNN, Random Forest, Poisson
-  evaluation.py          # împărțire cronologică și metrici
-  service.py             # orchestrare antrenare, predicții, export
-  ui/                    # interfață GTK4
- tests/                  # teste automate pentru noua aplicație
- docs/                   # metodologie și pregătire GitHub
- matches.csv             # date locale; ignorate implicit de Git
- scraping.py             # script existent, păstrat
- download_fbref.py        # script existent, păstrat
- html_to_py.py            # convertor existent, păstrat
+  web/
+    app.py                # rute Flask, validare HTTP și descărcări
+    workspace.py          # stare locală și operații în fundal
+    templates/index.html  # interfața web
+    static/app.css        # stiluri responsive
+    static/app.js         # interacțiuni și cereri către API
+  cli.py                  # server web și experimente fără interfață
+  doctor.py               # verificarea mediului și antetului CSV
+  data.py                 # validare date și clasamente
+  features.py             # caracteristici exclusiv pre-meci
+  models/                 # KNN, Random Forest și Poisson
+  service.py              # antrenare, predicție și export reutilizabile
+  evaluation.py           # separare cronologică și metrici
+  selection.py            # selecția hiperparametrilor pe validare
+  experiments.py          # evaluare retrospectivă pe sezoane
+  diagnostics.py          # analiza erorilor
 ```
 
-## Date
+Directorul vechi `ui/` și unele configurații Docker GTK sunt păstrate ca istoric, nu sunt folosite de pornirea implicită. Instrucțiunile istorice Docker/GTK nu reprezintă distribuirea noii aplicații web.
 
-Fișierul principal `matches.csv` a fost completat prin `soccerdata.MatchHistory` și conține **5.520 de perspective de echipă**, între **2019-08-09 și 2026-11-08**, reprezentând **2.760 de meciuri distincte**. Operațiile, sursele și verificările sunt documentate în **`DOCUMENTARE_DATE.md`**. Un meci apare de două ori în sursă: o dată pentru gazde și o dată pentru oaspeți. Aplicația construiește o singură observație pe meci, orientată gazde/oaspeți. Nu interpreta numărul de rânduri brute drept număr de meciuri distincte.
+## Date și algoritmi
 
-Coloane de bază în sursă: `date`, `season`, `team`, `opponent`, `venue`, `gf`, `ga`. Statisticile `sh`, `sot`, `poss` sunt utilizate numai din meciurile anterioare. Coloanele complet goale, de exemplu unele valori xG din această extracție, nu sunt prezentate drept informație disponibilă. Nu se descarcă automat date de pe internet.
+`matches.csv`, inclus intenționat în repository-ul privat, are **5.520 de perspective de echipă**, reprezentând **2.760 de meciuri distincte**, între **2019-08-09 și 2026-11-08**. Două perspective ale aceluiași meci nu sunt tratate ca meciuri diferite.
 
-**Datele se opresc la 8 noiembrie 2026.** Selectarea unei date ulterioare nu actualizează loturile sau forma echipelor. Predicțiile sunt simulări bazate pe istoricul disponibil, nu o descriere la zi a fotbalului.
+- **KNN:** statistici istorice de bază și standardizare ajustată numai pe antrenare.
+- **Random Forest:** setul de caracteristici istorice mai complex.
+- **Poisson:** probabilități de gol/scor și ajustare numerică a intensităților.
+- **Reper majoritar:** comparație simplă pentru evaluarea câștigului real.
 
-## Algoritmi și experimente
+Clasele sunt `0 = gazde`, `1 = egal`, `2 = oaspeți`. Hiperparametrii sunt selectați pe validare, nu pe test. Caracteristicile meciurilor testate folosesc numai rezultatele observate anterior; protocolul este secvențial pre-meci, nu prognoza unui sezon întreg dintr-o singură dată.
 
-- **KNN:** caracteristici de bază, normalizare și selecție de hiperparametri.
-- **Random Forest:** caracteristici istorice mai complexe și selecție de hiperparametri.
-- **Poisson:** intensități de gol și distribuție de scor; optimizare numerică a parametrilor.
-- **Reper simplu:** pentru a verifica dacă modelele aduc un avantaj real.
+**Nu există garanții asupra rezultatului sau profitului.** Identificarea egalurilor este o limită măsurată a modelelor actuale. Nu au fost promovate automat configurațiile experimentale care au obținut rezultate mai slabe.
 
-Ținta este cu trei clase: `0 = victorie gazde`, `1 = egal`, `2 = victorie oaspeți`. Procentele sunt estimări ale modelelor, nu certitudini și nici garanții de profit.
-
-Împărțirea datelor este cronologică, fără amestecare aleatorie, o zi de meci nu este împărțită între două seturi. Hiperparametrii se selectează pe validare, nu pe test. Statisticile istorice din test pot include rezultatele observate ale meciurilor de test anterioare: aceasta este evaluare secvențială pre-meci, nu prognoza unui sezon întreg dintr-o singură dată.
+## Experimente din terminal
 
 ```bash
-./run.sh --evaluate --output reports
+bash run.sh --evaluate --output reports
+bash run.sh --benchmark --output reports/optimization
 ```
 
-Exporturile includ tabelele cu metrici și căutarea hiperparametrilor, predicțiile de test și un raport JSON. Rezultatele experimentale trebuie generate din execuție, nu copiate din notebook ca performanță a noii aplicații.
-
-## Evaluare pe sezoane și analiza erorilor
-
-```bash
-./run.sh --benchmark --output reports/optimization
-```
-
-Compară configurațiile `legacy` și `optimized` pe aceleași meciuri, cu selecție numai pe sezonul anterior de validare. Generează tabele pe sezoane, predicții, metrici pe clase, calibrare și erori pe echipe. Rezultatele verificate și limitele sunt în `DOCUMENTARE_DATE.md`, secțiunea 12. KNN și Poisson au câștiguri agregate mici; căutarea extinsă nu îmbunătățește Random Forest. Interfața desktop nu a fost trecută automat pe configurațiile experimentale. Identificarea egalurilor rămâne o limită importantă.
+Tabelele agregate, explicațiile și rezultatele istorice sunt în `DOCUMENTARE_DATE.md`, `docs/METHODOLOGY.md` și `docs/RESULTS.md`. Directoarele `reports/` sunt generate local, nu vin automat cu o clonare nouă.
 
 ## Testare
 
 ```bash
-.venv/bin/python -m pytest tests -q
-# GTK necesită display; pe un sistem fără display:
-sudo apt install xvfb
-PYTHONPATH=src xvfb-run -a .venv/bin/python -c "import sys; sys.path.append('/usr/lib/python3/dist-packages'); import pytest; raise SystemExit(pytest.main(['tests', '-q']))"
+bash install.sh --dev
+PYTHONNOUSERSITE=1 .venv/bin/python -m pytest tests -q
 ```
 
-Testele vechilor scripturi din rădăcină pot necesita cache HTML local; acestea nu sunt condiții pentru instalarea aplicației de predicție.
+Testele web nu necesită Xvfb sau GTK. Pentru testele de interacțiune JavaScript sunt folosite Node.js și jsdom numai în dezvoltare; pe Debian/Ubuntu: `sudo apt install nodejs node-jsdom`. Nu sunt necesare pentru rularea site-ului și nu există un pas de build npm. CI verifică prezența lor înainte de teste. Testele vechii interfețe GTK și ale schiței Docker sunt arhivate în `legacy-tests/`, în afara colectării implicite; patru eșecuri X11 cunoscute ale vechiului launcher nu sunt prezentate drept remediate. Testele scripturilor vechi de colectare din rădăcină pot necesita un cache HTML local și nu fac parte din pornirea site-ului.
 
-## Notebookul inițial
+## Stare verificată
 
-Referință locală analizată: `~/Documents/projects/football_predict/main.ipynb`. Puncte reutilizate conceptual: Random Forest, medii mobile deplasate cu un meci și separare temporală. Notebookul inițial prezice victorie/non-victorie; aplicația extinde problema la trei clase, modele distincte și probabilități de scor. Notebookul și datele din celălalt director nu sunt modificate.
+Pe Linux, în mediul izolat fără GTK: **224 de teste trecute, 2 integrări opționale soccerdata omise**. Fluxul real în browser, importurile invalide/valide, descărcările și afișarea desktop/mobil au fost verificate. Wheel-ul a fost construit și instalat separat, cu resursele web incluse. Detalii: `DOCUMENTARE_DATE.md`; dovezile locale generate sunt în `reports/web-qa/report.md`. Windows/macOS și imaginea Docker nu sunt prezentate drept testate.
 
-## Rezultate și metodologie
+## Stare, importuri și securitate
 
-Rezultatele **actualizării prin soccerdata** sunt în `DOCUMENTARE_DATE.md` și `reports/soccerdata_update/`. Tabelele din `docs/RESULTS.md` descriu experimentul istoric, înaintea actualizării; explicațiile algoritmilor și limitele evaluării sunt în `docs/METHODOLOGY.md`. Workflow-ul `.github/workflows/tests.yml` este pregătit pentru teste automate pe GitHub, dar nu a fost rulat acolo.
+Această versiune este un **spațiu de lucru local, pentru un singur utilizator**, într-un singur proces Waitress. Nu include conturi, autentificare sau separarea datelor între utilizatori.
 
-## GitHub
+- Antrenarea și celelalte operații grele sunt serializate într-un worker; cererile HTTP nu așteaptă antrenarea completă.
+- Starea și modelele sunt în memorie. Reîmprospătarea paginii nu oprește operația; repornirea serverului necesită reantrenare.
+- Importurile și exporturile web sunt salvate în directorul de lucru, implicit `data/webapp/`, ignorat de Git.
+- CSV-ul importat este limitat la 10 MiB și validat înainte de înlocuirea sursei active.
+- Rutele care schimbă starea cer un token CSRF. Acesta nu reprezintă autentificare.
+- Descărcările sunt limitate la rapoartele generate de aplicație; utilizatorul nu poate cere arbitrar fișiere de pe server.
+- Resursele interfeței sunt locale; nu se folosesc CDN-uri, tracking sau date demonstrative prezentate drept rezultate reale.
 
-Vezi `docs/GITHUB.md`. Mediul virtual, cache-urile și rapoartele generate sunt ignorate. Datele sunt ignorate implicit până la verificarea dreptului de redistribuire. Nu s-a ales o licență în numele autorului și nu se publică automat în niciun cont.
+**Nu expune serverul direct pe internet.** Pentru publicare externă sunt necesare autentificare, HTTPS și o arhitectură multi-utilizator. `--host 0.0.0.0` este o opțiune de configurare pentru etapa viitoare de distribuire, nu o recomandare de expunere publică.
+
+## GitHub și Docker
+
+Repository: **privat**, `cristian292/football-predict`. Accesul colegilor se acordă prin conturile lor GitHub, fără partajarea credențialelor.
+
+Copia activă de lucru este `~/Documents/football_predict_github`. Datele personale, `.venv`, cache-urile, importurile și rapoartele nu se publică accidental. Nu s-a ales o licență pentru cod în numele autorului; drepturile asupra datelor trebuie verificate separat înaintea oricărei publicări publice.
+
+**Docker este etapa următoare, făcută împreună cu utilizatorul.** Configurațiile Docker vechi din proiect sunt pentru versiunea GTK și trebuie revizuite pentru serverul web. Nu este necesar noVNC sau acces la Wayland/X11 pentru noua aplicație.
 
 ## Documentație tehnică primară
 
-- GTK Python: <https://www.gtk.org/docs/language-bindings/python>
-- PyGObject instalare: <https://pygobject.gnome.org/getting_started.html>
-- KNN: <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>
-- Random Forest: <https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html>
-- Optimizare SciPy: <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>
-- Poisson SciPy: <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.poisson.html>
+- Flask: <https://flask.palletsprojects.com/>
+- Waitress: <https://docs.pylonsproject.org/projects/waitress/en/stable/>
+- scikit-learn: <https://scikit-learn.org/stable/>
+- SciPy: <https://docs.scipy.org/doc/scipy/>

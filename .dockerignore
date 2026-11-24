@@ -1,0 +1,38 @@
+# Deny everything unless needed by an explicit COPY instruction.
+# matches.csv is intentionally local-only; never push the resulting image.
+**
+!Dockerfile
+!.dockerignore
+!compose.yaml
+!pyproject.toml
+!README.md
+!matches.csv
+!run.sh
+!install.sh
+!docker-run.sh
+!src/
+!src/**
+!tests/
+!tests/*.py
+!docker/
+!docker/entrypoint.sh
+
+# Exclusions win even inside an allowed directory.
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.env
+**/.env.*
+**/.git
+**/.venv
+**/.pytest_cache
+**/.cache
+**/downloaded_files
+**/reports
+**/build
+**/dist
+**/*.egg-info
+**/*.bak
+**/*~
+**/*.pem
+**/*.key

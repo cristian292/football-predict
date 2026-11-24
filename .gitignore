@@ -5,6 +5,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.cache/
 .coverage
 htmlcov/
 build/
@@ -18,6 +19,8 @@ matches.csv
 matches_updated.csv
 data/raw/
 data/backups/
+data/input/
+data/webapp/
 data/*manifest*.json
 # Credentials
 .env
