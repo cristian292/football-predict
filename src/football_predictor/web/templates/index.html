@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="color-scheme" content="dark">
+  <title>Fotbal · Laborator predictiv</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Sari la conținut</a>
+  <div class="workspace">
+    <aside class="sidebar" aria-label="Spațiu de lucru">
+      <a class="brand" href="#predict"><span class="brand-mark" aria-hidden="true">F/</span><span>FOTBAL<small>Laborator predictiv</small></span></a>
+      <p class="nav-label">SPAȚIU DE ANALIZĂ</p>
+      <nav aria-label="Navigare principală">
+        <a href="#predict" aria-current="page"><span class="nav-number" aria-hidden="true">01</span>Predicții</a>
+        <a href="#experiments"><span class="nav-number" aria-hidden="true">02</span>Experimente</a>
+        <a href="#data"><span class="nav-number" aria-hidden="true">03</span>Date</a>
+        <a href="#method"><span class="nav-number" aria-hidden="true">04</span>Metodologie</a>
+      </nav>
+      <div class="sidebar-note"><span class="eyebrow">MODELE / 1 · X · 2</span><p>KNN · Random Forest<br>Poisson</p><small>Probabilități, nu certitudini.<br>Proiect educațional.</small></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="connection"><span id="state-dot" class="state-dot" aria-hidden="true"></span><span id="model-state">Conectare la laborator…</span></div>
+        <div class="toolbar"><button id="refresh-button" type="button">Actualizează</button><button id="export-button" type="button" disabled>Exportă raport</button><button id="train-button" class="primary" type="button" disabled>Antrenează modele</button></div>
+      </header>
+      <div class="dataset-strip"><span class="eyebrow">SURSĂ ACTIVĂ</span><span id="dataset-summary">Se verifică datele…</span></div>
+      <div class="job-status" id="job-status"><p id="status-message" role="status" aria-live="polite" aria-atomic="true">Se încarcă spațiul de lucru…</p><progress id="job-progress" max="1" value="0" aria-label="Progres operație" hidden></progress></div>
+      <main id="main" tabindex="-1">
+        <section id="page-predict" class="page" aria-labelledby="predict-title">
+          <div class="page-heading"><div><p class="eyebrow">COMPARĂ / ESTIMEAZĂ</p><h1 id="predict-title">Predicții</h1><p class="muted">Aceeași partidă. Trei perspective asupra rezultatului.</p></div><span class="outline-label">1 gazde · X egal · 2 oaspeți</span></div>
+          <p class="notice" id="dataset-warning">Estimările folosesc doar istoricul încărcat. Nu reprezintă recomandări de pariere.</p>
+          <noscript><p class="notice error">Activează JavaScript pentru a importa date și a rula modelele.</p></noscript>
+          <form id="prediction-form" class="panel fixture-form">
+            <div class="field"><label for="home-team">Gazde <span class="muted">/ 1</span></label><select id="home-team" aria-describedby="prediction-hint" name="home" required disabled><option value="">Selectează echipa</option></select></div>
+            <div class="field"><label for="away-team">Oaspeți <span class="muted">/ 2</span></label><select id="away-team" aria-describedby="prediction-hint" name="away" required disabled><option value="">Selectează echipa</option></select></div>
+            <div class="field"><label for="fixture-date">Data partidei</label><input id="fixture-date" aria-describedby="prediction-hint" name="date" type="date" required disabled></div>
+            <button id="predict-button" class="primary" type="submit" disabled>Calculează predicția</button>
+            <p class="form-hint" id="prediction-hint">Antrenează modelele înainte de a calcula o predicție.</p>
+          </form>
+          <div id="prediction-results"><div id="prediction-empty" class="empty-state"><span class="eyebrow">ÎNAINTE DE PRIMA ESTIMARE</span><h2>De la istoric la probabilități</h2><p>Importă un CSV în pagina Date, antrenează modelele, apoi selectează partida. Rezultatele reale vor apărea aici.</p><a href="#data" class="text-link">Deschide datele →</a></div><div id="prediction-output" hidden>
+            <div class="section-heading"><h2 id="fixture-label">Partida selectată</h2><span class="eyebrow">ESTIMARE / NU GARANȚIE</span></div>
+            <section class="panel"><div class="panel-heading"><h3>Probabilități rezultat</h3><span class="muted">Comparație între modele</span></div><div class="table-scroll" tabindex="0"><table id="probability-table"><caption class="sr-only">Probabilitățile 1, X și 2 pentru fiecare model</caption><thead><tr><th scope="col">Model</th><th scope="col">1 · Gazde</th><th scope="col">X · Egal</th><th scope="col">2 · Oaspeți</th></tr></thead><tbody id="probability-body"></tbody></table></div></section>
+            <div class="score-layout"><section class="panel"><div class="panel-heading"><h3>Scoruri probabile</h3><span class="muted">Poisson · top 10</span></div><p id="expected-goals"></p><ol id="score-list" class="score-list"></ol><p class="muted" id="score-tail"></p></section><section class="panel matrix-panel"><div class="panel-heading"><h3>Distribuția scorurilor</h3><span class="muted">Poisson</span></div><p class="muted">Gazde pe rânduri ↓ · oaspeți pe coloane →</p><div class="table-scroll" tabindex="0" id="score-matrix"></div><p class="heat-legend"><span>Mai puțin probabil</span><i class="heat-1" aria-hidden="true"></i><i class="heat-3" aria-hidden="true"></i><i class="heat-5" aria-hidden="true"></i><span>Mai probabil</span></p></section></div>
+            <details class="panel"><summary>Variabile la momentul predicției</summary><p class="muted">Calculate doar din partidele anterioare datei selectate.</p><dl id="features-content" class="feature-list"></dl></details>
+          </div></div>
+        </section>
+        <section id="page-experiments" class="page" aria-labelledby="experiments-title" hidden><div class="page-heading"><div><p class="eyebrow">EVALUEAZĂ / VERIFICĂ</p><h1 id="experiments-title">Experimente</h1><p class="muted">Comparație pe date nevăzute, nu pe datele de antrenare.</p></div></div><div id="report-content" class="empty-state"><h2>Nicio evaluare disponibilă</h2><p>Antrenează modelele pentru metrici, separarea temporală și matricile de confuzie.</p></div><div id="export-links" aria-live="polite"></div></section>
+        <section id="page-data" class="page" aria-labelledby="data-title" hidden><div class="page-heading"><div><p class="eyebrow">INSPECTEAZĂ / PREGĂTEȘTE</p><h1 id="data-title">Date</h1><p class="muted">Sursa comună pentru toate modelele și evaluările.</p></div></div><section class="panel"><div class="panel-heading"><h2>Importă sursa</h2><span class="outline-label">CSV local</span></div><p class="muted">Importul reușit înlocuiește datele active și necesită reantrenare. Un fișier invalid nu modifică sursa existentă.</p><form id="upload-form" enctype="multipart/form-data" class="import-form"><div class="field"><label for="upload-file">Fișier CSV</label><input id="upload-file" name="file" type="file" accept=".csv,text/csv" required aria-describedby="upload-hint"></div><button id="upload-button" type="submit" disabled>Importă CSV</button></form><button id="reset-button" type="button" disabled>Revino la sursa implicită</button><p id="upload-hint" class="muted">Folosește un fișier cu partide istorice, echipe și scoruri finale. Validarea este efectuată de server.</p></section>
+          <div class="data-layout"><section class="panel"><div class="panel-heading"><h2>Clasament</h2><div class="field compact-field"><label for="season-select">Sezon</label><select id="season-select" disabled><option value="">Fără sezoane</option></select></div></div><p class="muted">Calculat din rezultatele sursei încărcate.</p><div class="table-scroll" tabindex="0" id="standings-content"><p class="muted">Încarcă date pentru clasament.</p></div></section><section class="panel"><div class="panel-heading"><h2>Istoric echipă</h2></div><div class="field"><label for="history-team">Echipă</label><select id="history-team" disabled><option value="">Selectează echipa</option></select></div><p id="history-total" class="muted">Partide din istoricul încărcat.</p><div class="table-scroll" tabindex="0" id="history-content"></div></section></div></section>
+        <section id="page-method" class="page prose" aria-labelledby="method-title" hidden><div class="page-heading"><div><p class="eyebrow">ÎNȚELEGE / REPRODU</p><h1 id="method-title">Metodologie</h1><p class="muted">Cum se construiește o estimare și unde se oprește informația.</p></div></div><article class="panel"><span class="eyebrow">01 / MODELE</span><h2>Trei abordări, același rezultat</h2><p><strong>KNN</strong> estimează rezultatul din partide cu variabile similare. <strong>Random Forest</strong> combină arbori de decizie. <strong>Poisson</strong> estimează golurile așteptate și distribuția scorurilor, din care se obțin probabilitățile 1 / X / 2.</p></article><article class="panel"><span class="eyebrow">02 / TIMP, NU AMESTECARE ALEATORIE</span><h2>Doar informație din trecut</h2><p>Variabilele unei partide sunt calculate numai din meciurile anterioare ei. Antrenarea, validarea și testarea sunt separate cronologic. Evaluarea walk-forward înaintează în timp fără a folosi rezultate viitoare; protocolul și intervalele efective apar în Experimente. Hiperparametrii se aleg pe validare, nu pe test.</p></article><article class="panel"><span class="eyebrow">03 / CITIREA RAPORTULUI</span><h2>Mai mult decât acuratețe</h2><p>Acuratețea și macro F1 se interpretează în sens crescător. Log loss și Brier se interpretează în sens descrescător și evaluează probabilitățile. Matricile de confuzie arată clasele confundate: rânduri = rezultat real, coloane = rezultat prezis, în ordinea 1, X, 2. Un eșantion mic de test limitează concluziile.</p></article><article class="panel"><span class="eyebrow">04 / LIMITE</span><h2>Istoricul nu este un flux live</h2><p id="source-cutoff">Limita temporală este dată de ultimul meci din CSV-ul încărcat.</p><p>Nu sunt cunoscute automat accidentările, transferurile, cotele sau schimbările de lot. O dată de predicție viitoare nu adaugă informație nouă. Probabilitățile nu garantează rezultatul; proiectul nu oferă consiliere financiară.</p></article><article class="panel"><span class="eyebrow">05 / REPRODUCTIBILITATE</span><h2>Păstrează sursa și raportul</h2><p>Importă CSV-ul, antrenează, inspectează Experimente și exportă fișierele raportului. Păstrează sursa alături de parametri, intervale și rezultate pentru a putea reproduce analiza.</p></article></section>
+      </main>
+      <footer class="footer"><span>FOTBAL / laborator predictiv</span><span>Date istorice · fără flux live</span></footer>
+    </div>
+  </div>
+</body>
+</html>

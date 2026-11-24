@@ -1,4 +1,4 @@
-name: Python and GTK tests
+name: Python and web tests
 
 on:
   push:
@@ -10,17 +10,21 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-24.04
+    env:
+      PYTHONNOUSERSITE: "1"
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Install native GTK and headless display
+      - name: Install Python and frontend-test support (no GTK or display server)
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-venv python3-gi gir1.2-gtk-4.0 xvfb xauth
-      - name: Install application
-        run: |
-          /usr/bin/python3 -m venv --system-site-packages .venv
-          .venv/bin/python -m pip install -e '.[dev,scraping]'
-      - name: Test algorithms and desktop widgets
-        run: xvfb-run -a .venv/bin/python -m pytest tests -q
+          sudo apt-get install -y python3-venv nodejs node-jsdom
+      - name: Verify JavaScript DOM test tooling
+        run: node -e "require('jsdom'); console.log('jsdom ready')"
+      - name: Install web application and test dependencies
+        run: bash install.sh --dev
+      - name: Check web dependencies and included CSV
+        run: bash run.sh --doctor
+      - name: Run unit and web API tests
+        run: .venv/bin/python -m pytest tests -q
