@@ -1,9 +1,5 @@
 # Football Predictor — aplicație web
 
-Aplicație în Python pentru **analiza și predicția rezultatelor meciurilor de fotbal**, cu interfață în română, direct în browser.
-
-Versiunea web nu folosește GTK, GDK, noVNC sau un display virtual. Modelele și prelucrarea datelor sunt separate de prezentare. Containerizarea va fi pregătită ulterior, împreună cu autorul proiectului; în această etapă nu se construiește o imagine Docker.
-
 ## Pornire rapidă pe Linux/macOS
 
 Ai nevoie de Python **3.11 sau mai nou** și de acces la repository-ul privat. Din directorul proiectului:
